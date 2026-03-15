@@ -8,7 +8,14 @@ Introduction
 
 `ExecuTorch <https://github.com/pytorch/executorch>`_ is PyTorch's on-device inference runtime. In Zephyr, it can be
 integrated as an external module to run models on CPU and Arm Ethos-U NPUs.
-It is licensed under the `BSD 3-Clause License <https://github.com/pytorch/executorch/blob/main/LICENSE>`_.
+
+If you are new to ExecuTorch, these resources are a great place to start
+learning:
+
+- `How ExecuTorch Works <https://docs.pytorch.org/executorch/stable/intro-how-it-works.html>`_
+- `Getting Started Architecture overview <https://docs.pytorch.org/executorch/stable/getting-started-architecture.html>`_
+
+ExecuTorch is licensed under the `BSD 3-Clause License <https://github.com/pytorch/executorch/blob/main/LICENSE>`_.
 
 Usage with Zephyr
 *****************
@@ -18,7 +25,7 @@ build/run steps for both CPU and Arm Ethos-U NPU targets.
 
 .. note::
 
-   **Pre-requisites**
+   **Prerequisites**
 
    - **Python 3.10–3.13** — required by ExecuTorch and the Zephyr virtual
      environment.
@@ -26,10 +33,9 @@ build/run steps for both CPU and Arm Ethos-U NPU targets.
      targeting a Corstone FVP (e.g. ``mps3/corstone300/fvp``) to simulate
      Cortex-M and the Ethos-U NPU without physical hardware. See
      :ref:`Installing Arm FVPs <fvp-install>` for installation steps.
-   - **Docker (macOS only)** — also only required for the Ethos-NPU tab. The
-     `FVPs-on-Mac <https://github.com/Arm-Examples/FVPs-on-Mac.git>`_ project
-     wraps Arm FVP Linux binaries in Docker containers so they can run on
-     macOS. Docker must be installed and running before using FVPs on macOS.
+   - **Docker (macOS only)** — required only for the Arm Ethos-U NPU
+     Inference flow via
+     `FVPs-on-Mac <https://github.com/Arm-Examples/FVPs-on-Mac.git>`_.
 
 Installing ExecuTorch
 ==============================
@@ -49,7 +55,7 @@ add it directly to your application's existing ``west.yml``:
          path: modules/lib/executorch
          submodules: true
 
-**Step 2:** Run west config and update:
+**Step 2:** Run west update:
 
 .. code-block:: console
 
@@ -103,20 +109,21 @@ inference, and CPU-only inference for devices without an NPU.
 
                .. note::
 
-                  FVP version numbers change with each release — check the
-                  downloads page for the latest filename. The following
-                  ``curl`` command should work for version:
+                  FVP version numbers change with each release. Set the
+                  filename and URL to the version you want from the Arm
+                  downloads page.
 
                   .. code-block:: console
 
-                     curl -L -o FVP_corstone300.tgz \
-                       "https://developer.arm.com/-/cdn-downloads/permalink/FVPs-Corstone-IoT/Corstone-300/FVP_Corstone_SSE-300_11.27_42_Linux64_armv8l.tgz"
+                     FVP_TGZ="FVP_Corstone_SSE-300_11.27_42_Linux64_armv8l.tgz"
+                     FVP_URL="https://developer.arm.com/-/cdn-downloads/permalink/FVPs-Corstone-IoT/Corstone-300/${FVP_TGZ}"
+                     curl -L -o "${FVP_TGZ}" "${FVP_URL}"
 
                **Step 2:** Unpack the downloaded archive:
 
                .. code-block:: console
 
-                  tar -xf FVP_Corstone_SSE-300_<version>_Linux64.tgz
+                  tar -xf "${FVP_TGZ}"
 
                **Step 3:** Run the installation script:
 
@@ -183,6 +190,11 @@ inference, and CPU-only inference for devices without an NPU.
 
                   ./build.sh
 
+               .. note::
+
+                  Docker must be installed and running before executing the
+                  wrapper build and FVP commands on macOS.
+
                **Step 3:** Sanity check the build:
 
                .. code-block:: console
@@ -209,13 +221,13 @@ inference, and CPU-only inference for devices without an NPU.
 
                .. note::
 
-                  You may need to install `python39.dll` if you don't already have it
+                  You may need to install ``python39.dll`` if you don't already have it
 
                **Step 2:** Open a new PowerShell window and verify the installation:
 
                .. code-block:: console
 
-                  .\FVP_Corstone_SSE-320.exe --version
+                  .\FVP_Corstone_SSE-300.exe --version
 
             .. group-tab:: Zephyr Docker CI
 
@@ -281,6 +293,12 @@ inference, and CPU-only inference for devices without an NPU.
                container exactly as described in the build steps below.
 
       .. rubric:: Prepare the Ethos-U55 PTE model
+
+      In ExecuTorch, a ``.pte`` file is a serialized program file and the final
+      binary format used to deploy PyTorch models to edge and mobile devices.
+      For guidance on exporting and lowering your own PyTorch models with the
+      Arm Ethos-U backend, see
+      `Using ExecuTorch Export <https://docs.pytorch.org/executorch/stable/using-executorch-export.html>`_.
 
       The model used here is a minimal ``add`` model that takes two tensors
       and adds them element-wise. It exists purely to verify that the full
@@ -410,8 +428,11 @@ Reference
 *********
 
 - `ExecuTorch <https://github.com/pytorch/executorch>`_ — PyTorch's on-device inference runtime.
+- `How ExecuTorch Works <https://docs.pytorch.org/executorch/stable/intro-how-it-works.html>`_ — Primer on the ExecuTorch workflow.
+- `Getting Started Architecture <https://docs.pytorch.org/executorch/stable/getting-started-architecture.html>`_ — High-level ExecuTorch architecture overview.
 - `Arm FVPs <https://developer.arm.com/Tools%20and%20Software/Fixed%20Virtual%20Platforms/IoT%20FVPs>`_ — Fixed Virtual Platforms for Cortex-M and Ethos-U simulation.
 - `FVPs-on-Mac <https://github.com/Arm-Examples/FVPs-on-Mac.git>`_ — Docker wrappers that enable Arm FVPs to run on macOS.
 - `Arm Ethos-U NPU family <https://www.arm.com/products/silicon-ip-cpu?families=ethos%20npus>`_ — Arm's NPU IP for efficient on-device AI inference.
+- `Using ExecuTorch Export <https://docs.pytorch.org/executorch/stable/using-executorch-export.html>`_ — Guide to export and backend lowering for ExecuTorch models.
 - `Zephyr Docker CI image <https://github.com/zephyrproject-rtos/docker-image>`_ — Zephyr's official CI container, includes pre-installed FVPs and build dependencies.
 - `hello-executorch sample <https://github.com/pytorch/executorch/tree/main/zephyr/samples/hello-executorch>`_ — Minimal ExecuTorch sample for Zephyr used in this guide.
